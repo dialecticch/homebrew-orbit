@@ -7,7 +7,7 @@
 class OrbitMcp < Formula
   desc "Mandate-governed MCP server for Makina-X machines (read-write build)"
   homepage "https://github.com/dialecticch/homebrew-orbit"
-  version "0.1.0-rc.1"
+  version "0.1.0-rc.2"
 
   # url/sha256 are declared UNCONDITIONALLY. They used to sit inside
   # `if OS.mac? && Hardware::CPU.arm?`, which meant that whenever that
@@ -25,7 +25,7 @@ class OrbitMcp < Formula
   # A conditional may narrow or override what is served. It must never be the
   # only place a url is declared.
   url "https://github.com/dialecticch/homebrew-orbit/releases/download/v#{version}/orbit-mcp-aarch64-apple-darwin.tar.xz"
-  sha256 "e6e13101a2362316cc023f4fa94b2c36de9b7cb299f8cf4042112b94f671a946" # filled by sync-tap.sh from the release's SHA256SUMS
+  sha256 "6aeee2a60dcbf131e0d9592c28f31b0bef72ffcc5d511b1b412782036ffbe279" # filled by sync-tap.sh from the release's SHA256SUMS
 
   # NOT ADDED HERE: the release also publishes x86_64 Linux assets, which no
   # formula references. Adding them means teaching sync-tap.sh to fill a SECOND
@@ -34,8 +34,12 @@ class OrbitMcp < Formula
   # wrong risk to take — a mis-filled checksum fails as a corrupted download.
   # Filed separately; the tap serves macOS today exactly as it did before.
 
-  conflicts_with "orbit-mcp-readonly",
-    because: "both install a binary named `orbit-mcp`"
+  # NOT `conflicts_with "orbit-mcp-readonly"`: that makes Homebrew LOAD the sibling
+  # formula while installing this one, and on Homebrew with tap trust a tap
+  # trusted only for this formula then refuses the whole install ("Refusing
+  # to load formula …/orbit-mcp-readonly from untrusted tap"). The same refusal is
+  # made in `install` below by looking at the sibling's opt prefix, which
+  # never loads its formula.
 
   # Hard runtime dependency: the documented bootstrap (compose_root ->
   # ensure_integrations) shells out to `git clone/fetch/checkout` for the
@@ -89,6 +93,14 @@ class OrbitMcp < Formula
         Releases: https://github.com/dialecticch/homebrew-orbit/releases
       EOS
     end
+    if (HOMEBREW_PREFIX/"opt/orbit-mcp-readonly").exist?
+      odie <<~EOS
+        orbit-mcp-readonly is installed, and both install a binary named `orbit-mcp`.
+        A machine is read-only or read-write, not both. To switch, run:
+          brew uninstall orbit-mcp-readonly
+        and then install orbit-mcp again.
+      EOS
+    end
     bin.install "orbit-mcp"
     bin.install "orbit-watchdog"
     # One command name: `orbit-mcp` is both what a person types and what an
@@ -129,18 +141,19 @@ class OrbitMcp < Formula
         #{opt_pkgshare}/package-manifest-schema.md  # the manifest contract
         #{opt_pkgshare}/watchdog.example.toml   # circuit-breaker config
 
-      After `brew upgrade`: restart/reconnect your MCP host — a running
-      reload the bundled skills (refresh separately copied host skills). A
-      server keeps serving the OLD build until it is restarted. To catch a
-      stale server, compare the health_check tool's `version` (the RUNNING
-      image) against `orbit-mcp --version` (what is on disk).
+      After `brew upgrade`, restart or reconnect your MCP host. A running
+      server keeps serving the old build until it is restarted. Then reload
+      the bundled skills, and refresh any host skills you copied separately.
+      To catch a stale server, compare the health_check tool's `version`
+      (the running build) with `orbit-mcp --version` (what is on disk).
 
       A newly provisioned Safe has NO instruction root, and that is normal —
       one cannot exist before you compose it. Orbit boots "unrooted" and
       offers the path out: install a package, compose_root, then the Safe
       OWNER signs setAllowedInstrRoot.
 
-      Reporting-only? Install dialecticch/orbit/orbit-mcp-readonly.
+      Reporting-only? Run `brew uninstall orbit-mcp` first, then install
+      dialecticch/orbit/orbit-mcp-readonly.
     EOS
   end
 

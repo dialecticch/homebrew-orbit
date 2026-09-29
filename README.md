@@ -10,16 +10,22 @@ release artifacts they point at.
 ## Install
 
 ```sh
+brew trust --formula dialecticch/orbit/orbit-mcp   # Homebrew with tap trust only
 brew install dialecticch/orbit/orbit-mcp
 ```
 
 Reporting only, with signing code compiled out rather than disabled:
 
 ```sh
+brew trust --formula dialecticch/orbit/orbit-mcp-readonly   # Homebrew with tap trust only
 brew install dialecticch/orbit/orbit-mcp-readonly
 ```
 
-The two conflict — they install the same binary name. Pick one.
+On older Homebrew without `trust`, skip the trust line. Trusting one formula is
+enough: neither formula makes Homebrew load the other.
+
+The two cannot both be installed — they install the same binary name. Pick
+one; installing one over the other stops and says how to switch.
 
 ## First run
 

@@ -7,7 +7,7 @@
 class OrbitMcpReadonly < Formula
   desc "Reporting-only MCP server for Makina-X machines (no signing capability compiled in)"
   homepage "https://github.com/dialecticch/homebrew-orbit"
-  version "0.1.0-rc.1"
+  version "0.1.0-rc.2"
 
   # url/sha256 are declared UNCONDITIONALLY. They used to sit inside
   # `if OS.mac? && Hardware::CPU.arm?`, which meant that whenever that
@@ -25,7 +25,7 @@ class OrbitMcpReadonly < Formula
   # A conditional may narrow or override what is served. It must never be the
   # only place a url is declared.
   url "https://github.com/dialecticch/homebrew-orbit/releases/download/v#{version}/orbit-mcp-readonly-aarch64-apple-darwin.tar.xz"
-  sha256 "242b6d45447caa1bf74b9435e742e564bb2ca8bb44f893f457ea06aefb2318f9" # filled by sync-tap.sh from the release's SHA256SUMS
+  sha256 "1d7d476222c3e3bbc8b46ef94b856c1b0df0e55f74d2fc9f89a7c652fd05752f" # filled by sync-tap.sh from the release's SHA256SUMS
 
   # NOT ADDED HERE: the release also publishes x86_64 Linux assets, which no
   # formula references. Adding them means teaching sync-tap.sh to fill a SECOND
@@ -34,8 +34,12 @@ class OrbitMcpReadonly < Formula
   # wrong risk to take — a mis-filled checksum fails as a corrupted download.
   # Filed separately; the tap serves macOS today exactly as it did before.
 
-  conflicts_with "orbit-mcp",
-    because: "both install a binary named `orbit-mcp`"
+  # NOT `conflicts_with "orbit-mcp"`: that makes Homebrew LOAD the sibling
+  # formula while installing this one, and on Homebrew with tap trust a tap
+  # trusted only for this formula then refuses the whole install ("Refusing
+  # to load formula …/orbit-mcp from untrusted tap"). The same refusal is
+  # made in `install` below by looking at the sibling's opt prefix, which
+  # never loads its formula.
 
   # Hard runtime dependency: the documented bootstrap (compose_root ->
   # ensure_integrations) shells out to `git clone/fetch/checkout` for the
@@ -72,6 +76,14 @@ class OrbitMcpReadonly < Formula
     # you have without executing it; the installed COMMAND is `orbit-mcp`
     # for both variants, because that is what every skill, the README, and
     # MCP host configs invoke.
+    if (HOMEBREW_PREFIX/"opt/orbit-mcp").exist?
+      odie <<~EOS
+        orbit-mcp is installed, and both install a binary named `orbit-mcp`.
+        A machine is read-only or read-write, not both. To switch, run:
+          brew uninstall orbit-mcp
+        and then install orbit-mcp-readonly again.
+      EOS
+    end
     bin.install "orbit-mcp-readonly" => "orbit-mcp"
     # One command name: `orbit-mcp` is both what a person types and what an
     # MCP host launches. See `orbit-mcp --help`.
