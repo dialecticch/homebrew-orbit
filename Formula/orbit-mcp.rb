@@ -7,7 +7,7 @@
 class OrbitMcp < Formula
   desc "Mandate-governed MCP server for Makina-X machines (read-write build)"
   homepage "https://github.com/dialecticch/homebrew-orbit"
-  version "0.1.0-rc.3"
+  version "0.1.0-rc.4"
 
   # url/sha256 are declared UNCONDITIONALLY. They used to sit inside
   # `if OS.mac? && Hardware::CPU.arm?`, which meant that whenever that
@@ -25,7 +25,7 @@ class OrbitMcp < Formula
   # A conditional may narrow or override what is served. It must never be the
   # only place a url is declared.
   url "https://github.com/dialecticch/homebrew-orbit/releases/download/v#{version}/orbit-mcp-aarch64-apple-darwin.tar.xz"
-  sha256 "bc1b922ca9f922fb11ffab65cb4d91bc5f81436476b9f4dc5fb9f5d945159785" # filled by sync-tap.sh from the release's SHA256SUMS
+  sha256 "e0dc037c54058c41b2be4700f49975be89f63a6926d41b9e74d6fd4095204da0" # filled by sync-tap.sh from the release's SHA256SUMS
 
   # NOT ADDED HERE: the release also publishes x86_64 Linux assets, which no
   # formula references. Adding them means teaching sync-tap.sh to fill a SECOND
