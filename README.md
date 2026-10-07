@@ -7,6 +7,37 @@ that gives AI agents governed access to a Gnosis Safe running a
 This repository contains **no source** — only the Homebrew formulas and the
 release artifacts they point at.
 
+## For testers
+
+1. **Install** the read-write build with the two commands under
+   [Install](#install) below. Already installed? Update instead:
+
+   ```sh
+   brew update
+   brew upgrade orbit-mcp
+   ```
+
+2. **Give Claude Code the skills.** Orbit installs short guides for the agent.
+   Copy them into Claude Code's skills folder, and again after every upgrade:
+
+   ```sh
+   mkdir -p ~/.claude/skills
+   cp -R "$(brew --prefix orbit-mcp)/share/orbit-mcp/skills/"* ~/.claude/skills/
+   ```
+
+3. **Register Orbit in Claude Code**, once, for every folder you work in:
+
+   ```sh
+   claude mcp add --scope user orbit -- orbit-mcp
+   ```
+
+4. **Start.** Open Claude Code and say "Set up Dialectic Orbit". The agent
+   walks you through the rest and asks before anything costs money.
+
+Report issues in the internal channel you were invited from, with the steps,
+a screenshot and the output of `orbit-mcp --version`. Never share keys, seed
+phrases or Safe owner keys; nobody will ask for them.
+
 ## Install
 
 ```sh
@@ -82,10 +113,9 @@ can be downloaded and unpacked directly. Two things to know before you do:
 - they require **glibc ≥ 2.39**, so Ubuntu 22.04 and Debian 12 cannot run them;
 - there is **no `aarch64-unknown-linux-gnu` build**.
 
-**Do not install via this tap on Linux or Intel macOS.** The formula will
-download the macOS-arm64 tarball and install a binary that cannot run on your
-machine — it succeeds and leaves you with something broken rather than
-refusing.
+**Do not install via this tap on Linux or Intel macOS.** The formula stops
+there with a message rather than installing a binary that cannot run on your
+machine, and says what is available for your machine.
 
 The binaries are **not signed or notarized**, so first launch on macOS may need
 Gatekeeper approval (System Settings → Privacy & Security).
