@@ -1,31 +1,23 @@
 # Source of truth for the dialecticch/homebrew-orbit formula.
 #
-# Do NOT hand-edit the version or sha256: run ./sync-tap.sh <tag>, which reads
-# the release's SHA256SUMS and rewrites both formulas, then copy them to the
-# tap. A hand-maintained checksum is a checksum that silently goes stale --
-# this file sat at 0.1.0-rc.1 against a 0.4.0 codebase.
+# Do NOT hand-edit the url version or sha256: run ./sync-tap.sh <tag>, which
+# reads the release's SHA256SUMS and rewrites both formulas, then copy them
+# to the tap. The version lives in the url (strict audit: a separate
+# `version` line is redundant), and sync-tap.sh refuses a url that does not
+# name the tag.
 class OrbitMcpReadonly < Formula
-  desc "Reporting-only MCP server for Makina-X machines (no signing capability compiled in)"
+  desc "Reporting-only MCP server for Makina-X machines (no signing code)"
   homepage "https://github.com/dialecticch/homebrew-orbit"
-  version "0.1.0"
-
-  # url/sha256 are declared UNCONDITIONALLY. They used to sit inside
-  # `if OS.mac? && Hardware::CPU.arm?`, which meant that whenever that
-  # expression was false — or could not be EVALUATED — the formula had no url
-  # at all, and Homebrew rejected the FORMULA rather than the platform:
+  # url/sha256 are declared UNCONDITIONALLY. A url that existed only inside
+  # `if OS.mac? && Hardware::CPU.arm?` left the formula with no url when that
+  # expression could not be evaluated, and `brew tap` rejected the FORMULA:
   #
   #     Error: dialecticch/orbit/orbit-mcp: formula requires at least a URL
   #
-  # A tester hit exactly that: their Homebrew could not parse macOS `26.2` and
-  # raised `MacOSVersion::Error` while evaluating the condition. Their broken
-  # brew was not our bug; turning it into an error that points at our
-  # packaging was. `brew tap` was broken on the stable channel with every
-  # version field correct.
-  #
-  # A conditional may narrow or override what is served. It must never be the
-  # only place a url is declared.
-  url "https://github.com/dialecticch/homebrew-orbit/releases/download/v#{version}/orbit-mcp-readonly-aarch64-apple-darwin.tar.xz"
-  sha256 "b0933ec1ba464e191c4da06288d82a69b1a77c1f5b1a64dbb38945cb0601afcb" # filled by sync-tap.sh from the release's SHA256SUMS
+  # A conditional may narrow or override what is served. It must never be
+  # the only place a url is declared.
+  url "https://github.com/dialecticch/homebrew-orbit/releases/download/v0.1.1/orbit-mcp-readonly-aarch64-apple-darwin.tar.xz"
+  sha256 "bbd8c2cb4f7c7e256fb8ec22184f46df9ce0d04fde8a840e37e648bba5d0448b" # sync-tap.sh # sync-tap.sh
 
   # NOT ADDED HERE: the release also publishes x86_64 Linux assets, which no
   # formula references. Adding them means teaching sync-tap.sh to fill a SECOND
@@ -56,7 +48,8 @@ class OrbitMcpReadonly < Formula
   # installing an unrunnable binary. A formula must LOAD everywhere and need
   # only INSTALL where it works.
   def install
-    unless OS.mac? && Hardware::CPU.arm?
+    supported = OS.mac? && Hardware::CPU.arm?
+    unless supported
       odie <<~EOS
         orbit-mcp-readonly is packaged for macOS on Apple Silicon (arm64) only,
         and this machine is not that. Refusing rather than installing a binary
@@ -111,6 +104,9 @@ class OrbitMcpReadonly < Formula
       server keeps serving the OLD build until it is restarted. To catch a
       stale server, compare the health_check tool's `version` (the RUNNING
       image) against `orbit-mcp --version` (what is on disk).
+
+      Orbit serves its guides through the connection (the get_guide tool);
+      replace any copied orbit-* skills with the stubs it returns.
 
       Set `operator_address` in your [safes.<name>] block — read-only builds
       have no signer to derive it from, and position valuation is

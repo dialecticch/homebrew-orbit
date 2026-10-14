@@ -17,13 +17,9 @@ release artifacts they point at.
    brew upgrade orbit-mcp
    ```
 
-2. **Give Claude Code the skills.** Orbit installs short guides for the agent.
-   Copy them into Claude Code's skills folder, and again after every upgrade:
-
-   ```sh
-   mkdir -p ~/.claude/skills
-   cp -R "$(brew --prefix orbit-mcp)/share/orbit-mcp/skills/"* ~/.claude/skills/
-   ```
+2. **Nothing to copy.** Orbit serves its guides to your agent through the
+   connection. If you copied Orbit's skills for an earlier version, ask the
+   agent to replace them with Orbit's stubs (its `get_guide` tool returns them).
 
 3. **Register Orbit in Claude Code**, once, for every folder you work in:
 
@@ -107,11 +103,30 @@ version before swapping anything, keeps the previous binary as `*.prev`, and
 **This tap serves macOS arm64 (Apple Silicon).** That is what `brew install`
 here installs and the only target it can install correctly.
 
-Linux tarballs (`x86_64-unknown-linux-gnu`) are published with each release and
-can be downloaded and unpacked directly. Two things to know before you do:
+Linux x86_64 installs from the release page, not this tap. First check your
+glibc (the tarballs need **glibc 2.39 or newer**; Ubuntu 22.04 and Debian 12
+are too old):
 
-- they require **glibc ≥ 2.39**, so Ubuntu 22.04 and Debian 12 cannot run them;
-- there is **no `aarch64-unknown-linux-gnu` build**.
+```sh
+ldd --version | head -1
+```
+
+Then download, verify and unpack into a directory of its own:
+
+```sh
+TAG=v0.1.1   # the release you want
+mkdir -p ~/orbit && cd ~/orbit
+curl -fLO "https://github.com/dialecticch/homebrew-orbit/releases/download/${TAG}/orbit-mcp-x86_64-unknown-linux-gnu.tar.xz"
+curl -fLO "https://github.com/dialecticch/homebrew-orbit/releases/download/${TAG}/SHA256SUMS"
+grep orbit-mcp-x86_64-unknown-linux-gnu.tar.xz SHA256SUMS | sha256sum -c -
+tar -xJf orbit-mcp-x86_64-unknown-linux-gnu.tar.xz
+~/orbit/orbit-mcp --version
+```
+
+Register `~/orbit/orbit-mcp` (the full path) with your agent app, for example
+`claude mcp add --scope user orbit -- ~/orbit/orbit-mcp`. The write tarball
+includes the simulators Orbit needs (Base Anvil and a pinned stock anvil), so
+Foundry is not required. There is **no `aarch64-unknown-linux-gnu` build**.
 
 **Do not install via this tap on Linux or Intel macOS.** The formula stops
 there with a message rather than installing a binary that cannot run on your
@@ -119,3 +134,14 @@ machine, and says what is available for your machine.
 
 The binaries are **not signed or notarized**, so first launch on macOS may need
 Gatekeeper approval (System Settings → Privacy & Security).
+
+## Troubleshooting
+
+**`brew install` stops making progress.** Homebrew 7.0.8 can hang while
+downloading in parallel. Orbit's download is fine. Stop it with Ctrl-C and run:
+
+```sh
+HOMEBREW_DOWNLOAD_CONCURRENCY=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install dialecticch/orbit/orbit-mcp
+```
+
+For the reporting-only build, use `dialecticch/orbit/orbit-mcp-readonly` instead.
