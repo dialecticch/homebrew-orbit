@@ -16,8 +16,8 @@ class OrbitMcp < Formula
   #
   # A conditional may narrow or override what is served. It must never be
   # the only place a url is declared.
-  url "https://github.com/dialecticch/homebrew-orbit/releases/download/v0.1.1/orbit-mcp-aarch64-apple-darwin.tar.xz"
-  sha256 "cbabbd14eeedf27ddfb9ff5b53e479259f037a958f11a9b50c648f588e65e108" # sync-tap.sh # sync-tap.sh
+  url "https://github.com/dialecticch/homebrew-orbit/releases/download/v0.1.4/orbit-mcp-aarch64-apple-darwin.tar.xz"
+  sha256 "00c582cfe0f783f27a63b89b11d2386870c123064982750ab4c8aef62ce55b17" # sync-tap.sh # sync-tap.sh
 
   # NOT ADDED HERE: the release also publishes x86_64 Linux assets, which no
   # formula references. Adding them means teaching sync-tap.sh to fill a SECOND
