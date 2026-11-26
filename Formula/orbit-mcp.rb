@@ -12,8 +12,8 @@ class OrbitMcp < Formula
   # conditional leaves the formula with no url when it cannot be evaluated, and
   # `brew tap` rejects the formula. A conditional may narrow or override what is
   # served but must never be the only place a url is declared.
-  url "https://github.com/dialecticch/homebrew-orbit/releases/download/v0.1.9/orbit-mcp-aarch64-apple-darwin.tar.xz"
-  sha256 "c77c973901debbb1617d30cdc3da6ad19be4c8cbad7f08ba99f3420face80c4f" # sync-tap.sh # sync-tap.sh
+  url "https://github.com/dialecticch/homebrew-orbit/releases/download/v0.1.10/orbit-mcp-aarch64-apple-darwin.tar.xz"
+  sha256 "8fa0df9f70b44ec2925238403e13c7a5a9a7ff3444c8cd659078a3e36c09f05e" # sync-tap.sh # sync-tap.sh
   license "BUSL-1.1"
 
   # The x86_64 Linux release assets are not referenced here; supporting them
