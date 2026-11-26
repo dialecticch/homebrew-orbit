@@ -8,66 +8,34 @@
 class OrbitMcp < Formula
   desc "Mandate-governed MCP server for Makina-X machines (read-write build)"
   homepage "https://github.com/dialecticch/homebrew-orbit"
-  # url/sha256 are declared UNCONDITIONALLY. A url that existed only inside
-  # `if OS.mac? && Hardware::CPU.arm?` left the formula with no url when that
-  # expression could not be evaluated, and `brew tap` rejected the FORMULA:
-  #
-  #     Error: dialecticch/orbit/orbit-mcp: formula requires at least a URL
-  #
-  # A conditional may narrow or override what is served. It must never be
-  # the only place a url is declared.
-  url "https://github.com/dialecticch/homebrew-orbit/releases/download/v0.1.8/orbit-mcp-aarch64-apple-darwin.tar.xz"
-  sha256 "c1edf8114c0ca49c6e2c0e894adf96b3f5d85fac6d44a114e0f30fa9dde2734b" # sync-tap.sh # sync-tap.sh
+  # url/sha256 are declared unconditionally: a url that exists only inside a
+  # conditional leaves the formula with no url when it cannot be evaluated, and
+  # `brew tap` rejects the formula. A conditional may narrow or override what is
+  # served but must never be the only place a url is declared.
+  url "https://github.com/dialecticch/homebrew-orbit/releases/download/v0.1.9/orbit-mcp-aarch64-apple-darwin.tar.xz"
+  sha256 "c77c973901debbb1617d30cdc3da6ad19be4c8cbad7f08ba99f3420face80c4f" # sync-tap.sh # sync-tap.sh
+  license "BUSL-1.1"
 
-  # NOT ADDED HERE: the release also publishes x86_64 Linux assets, which no
-  # formula references. Adding them means teaching sync-tap.sh to fill a SECOND
-  # (url, sha256) pair from a different asset name, and widening that fill
-  # logic inside a fix that unblocks `brew tap` on the stable channel is the
-  # wrong risk to take — a mis-filled checksum fails as a corrupted download.
-  # Filed separately; the tap serves macOS today exactly as it did before.
+  # The x86_64 Linux release assets are not referenced here; supporting them
+  # needs sync-tap.sh to fill a second (url, sha256) pair from another asset name.
 
-  # NOT `conflicts_with "orbit-mcp-readonly"`: that makes Homebrew LOAD the sibling
-  # formula while installing this one, and on Homebrew with tap trust a tap
-  # trusted only for this formula then refuses the whole install ("Refusing
-  # to load formula …/orbit-mcp-readonly from untrusted tap"). The same refusal is
-  # made in `install` below by looking at the sibling's opt prefix, which
-  # never loads its formula.
+  # No `conflicts_with "orbit-mcp-readonly"`: it makes Homebrew load the sibling
+  # formula, which a tap trusted only for this formula refuses ("Refusing to load
+  # formula …/orbit-mcp-readonly from untrusted tap"). `install` below checks the
+  # sibling's opt prefix instead, which never loads its formula.
 
-  # Hard runtime dependency: the documented bootstrap (compose_root ->
-  # ensure_integrations) shells out to `git clone/fetch/checkout` for the
-  # pinned makina-integrations ref. On a fresh Mac with no Xcode CLT the
-  # bare `git` stub pops a GUI installer mid-tool-call; declaring it here
-  # makes brew install a real one up front.
+  # Hard runtime dependency: the bootstrap (compose_root -> ensure_integrations)
+  # shells out to `git clone/fetch/checkout`; declaring it avoids the GUI
+  # installer stub on a Mac without Xcode CLT.
   depends_on "git"
 
-  # Refuse a platform this tarball cannot run on — AT INSTALL TIME, and the
-  # timing is the whole design.
+  # Refuse a platform this tarball cannot run on at install time, not load time:
+  # a formula must load everywhere (`brew tap`, `brew search`, dependency walks)
+  # and only needs to install where it works. A load-time conditional around
+  # url/sha256 would leave the formula with no url when it cannot be evaluated.
   #
-  # cc-156 removed a load-time conditional (`if OS.mac? && Hardware::CPU.arm?`
-  # around url/sha256) because a condition that could not be EVALUATED left the
-  # formula with no url and Homebrew rejected the FORMULA rather than the
-  # platform — `brew tap` broken on the stable channel with every version field
-  # correct. That fix was right and stands: url/sha256 stay unconditional above.
-  #
-  # Its consequence was this: `brew install` on Linux or Intel began DOWNLOADING
-  # the darwin-arm64 tarball and installing a binary that cannot execute. It
-  # used to refuse. A refusal is a bad experience; a successful install of a
-  # binary that cannot run is a bug report from someone who believes they
-  # installed the product.
-  #
-  # So the refusal moves to where it belongs. A formula must LOAD everywhere —
-  # that is what `brew tap`, `brew search` and every dependency walk need — and
-  # need only INSTALL where it works. `install` runs on one machine, at a moment
-  # when a raised error is the correct outcome anyway, so a check here cannot
-  # break tapping the way a class-level one did.
-  #
-  # NOT SOLVED HERE, deliberately: the release does publish an x86_64 Linux
-  # tarball, but it requires glibc >= 2.39 (read from `.gnu.version_r`, not
-  # guessed), so Ubuntu 22.04 and Debian 12 cannot run it, and there is no
-  # aarch64-linux build at all. Pointing the formula at it would re-create this
-  # very defect on every older Linux — "installs something that cannot run",
-  # one platform over. Naming the tarball and its floor lets a reader decide;
-  # installing it for them would not.
+  # The x86_64 Linux tarball is not used: it requires glibc >= 2.39 (so Ubuntu
+  # 22.04 and Debian 12 cannot run it) and there is no aarch64-linux build.
   def install
     supported = OS.mac? && Hardware::CPU.arm?
     unless supported

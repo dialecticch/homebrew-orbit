@@ -8,45 +8,30 @@
 class OrbitMcpReadonly < Formula
   desc "Reporting-only MCP server for Makina-X machines (no signing code)"
   homepage "https://github.com/dialecticch/homebrew-orbit"
-  # url/sha256 are declared UNCONDITIONALLY. A url that existed only inside
-  # `if OS.mac? && Hardware::CPU.arm?` left the formula with no url when that
-  # expression could not be evaluated, and `brew tap` rejected the FORMULA:
-  #
-  #     Error: dialecticch/orbit/orbit-mcp: formula requires at least a URL
-  #
-  # A conditional may narrow or override what is served. It must never be
-  # the only place a url is declared.
-  url "https://github.com/dialecticch/homebrew-orbit/releases/download/v0.1.8/orbit-mcp-readonly-aarch64-apple-darwin.tar.xz"
-  sha256 "b358967c19734110e6ca27e3c06511d9ba3cc31499ef4ded1310705de5d76ee8" # sync-tap.sh # sync-tap.sh
+  # url/sha256 are declared unconditionally: a url that exists only inside a
+  # conditional leaves the formula with no url when it cannot be evaluated, and
+  # `brew tap` rejects the formula. A conditional may narrow or override what is
+  # served but must never be the only place a url is declared.
+  url "https://github.com/dialecticch/homebrew-orbit/releases/download/v0.1.9/orbit-mcp-readonly-aarch64-apple-darwin.tar.xz"
+  sha256 "943b0f761b36bfba71ffa769f5339a74ab6dcec69689268102e01facbe4798d3" # sync-tap.sh # sync-tap.sh
+  license "BUSL-1.1"
 
-  # NOT ADDED HERE: the release also publishes x86_64 Linux assets, which no
-  # formula references. Adding them means teaching sync-tap.sh to fill a SECOND
-  # (url, sha256) pair from a different asset name, and widening that fill
-  # logic inside a fix that unblocks `brew tap` on the stable channel is the
-  # wrong risk to take — a mis-filled checksum fails as a corrupted download.
-  # Filed separately; the tap serves macOS today exactly as it did before.
+  # The x86_64 Linux release assets are not referenced here; supporting them
+  # needs sync-tap.sh to fill a second (url, sha256) pair from another asset name.
 
-  # NOT `conflicts_with "orbit-mcp"`: that makes Homebrew LOAD the sibling
-  # formula while installing this one, and on Homebrew with tap trust a tap
-  # trusted only for this formula then refuses the whole install ("Refusing
-  # to load formula …/orbit-mcp from untrusted tap"). The same refusal is
-  # made in `install` below by looking at the sibling's opt prefix, which
-  # never loads its formula.
+  # No `conflicts_with "orbit-mcp"`: it makes Homebrew load the sibling formula,
+  # which a tap trusted only for this formula refuses ("Refusing to load formula
+  # …/orbit-mcp from untrusted tap"). `install` below checks the sibling's opt
+  # prefix instead, which never loads its formula.
 
-  # Hard runtime dependency: the documented bootstrap (compose_root ->
-  # ensure_integrations) shells out to `git clone/fetch/checkout` for the
-  # pinned makina-integrations ref. On a fresh Mac with no Xcode CLT the
-  # bare `git` stub pops a GUI installer mid-tool-call; declaring it here
-  # makes brew install a real one up front.
+  # Hard runtime dependency: the bootstrap (compose_root -> ensure_integrations)
+  # shells out to `git clone/fetch/checkout`; declaring it avoids the GUI
+  # installer stub on a Mac without Xcode CLT.
   depends_on "git"
 
-  # Refuse a platform this tarball cannot run on — AT INSTALL TIME, and the
-  # timing is the whole design. See the long note in `orbit-mcp.rb`: cc-156
-  # removed a LOAD-time conditional because a condition that could not be
-  # evaluated left the formula with no url and broke `brew tap` itself; the
-  # cost was that `brew install` on Linux or Intel started succeeding and
-  # installing an unrunnable binary. A formula must LOAD everywhere and need
-  # only INSTALL where it works.
+  # Refuse a platform this tarball cannot run on at install time, not load time:
+  # a formula must load everywhere (`brew tap`, `brew search`) and only needs to
+  # install where it works. See `orbit-mcp.rb`.
   def install
     supported = OS.mac? && Hardware::CPU.arm?
     unless supported
@@ -65,10 +50,8 @@ class OrbitMcpReadonly < Formula
         Releases: https://github.com/dialecticch/homebrew-orbit/releases
       EOS
     end
-    # The artifact carries the DISTINCT name so `tar -tf` says which variant
-    # you have without executing it; the installed COMMAND is `orbit-mcp`
-    # for both variants, because that is what every skill, the README, and
-    # MCP host configs invoke.
+    # The artifact carries a distinct name so `tar -tf` shows the variant; the
+    # installed command is `orbit-mcp` for both variants.
     if (HOMEBREW_PREFIX/"opt/orbit-mcp").exist?
       odie <<~EOS
         orbit-mcp is installed, and both install a binary named `orbit-mcp`.
